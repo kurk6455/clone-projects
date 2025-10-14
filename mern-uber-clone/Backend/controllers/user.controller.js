@@ -1,10 +1,10 @@
 const { validationResult } = require('express-validator');
 const userModel = require('../models/user.model');
 const userService = require('../services/user.service');
+const jwt = require('jsonwebtoken');
 
 module.exports.registerUser = async (req, res, next) => {
     const errors = validationResult(req);
-
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
     }
@@ -35,4 +35,28 @@ module.exports.registerUser = async (req, res, next) => {
     //generate token
     const token = user.generateAuthToken();
     res.status(201).json({ token, user })
+}
+
+module.exports.loginUser = async (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        res.status(400).json({ errors: errors.array() })
+    }
+
+    const { email, password } = req.body;
+
+    //Find if the user exists or not (with email&password)
+    const user = await userModel.findOne({ email }).select("+password");
+    if (!user) {
+        return res.status(400).json({ message: "invalid email : user not found" })
+    }
+    //Find if the password match or not
+    const isMatch = await user.comparePassword(password)
+    if (!isMatch) {
+        return res.status(400).json({ message: "invalid password" })
+    }
+
+    const token = await user.generateAuthToken();
+    res.cookie('token', token);
+    res.status(200).json({token, user});
 }
