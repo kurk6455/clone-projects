@@ -1,34 +1,45 @@
-import { useEffect, useState } from 'react';
+import { useContext, useState } from 'react';
 import uberLogo from '../assets/uberLogo.svg'
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { userContext } from '../../context/UserContextProvider';
 
 const UserSignup = () => {
     const [firstname, setFirstname] = useState('');
     const [lastname, setLastname] = useState('');
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [userData, setUserData] = useState({});
+    
+    const { user, setUser } = useContext(userContext);
+    const navigate = useNavigate();
 
-    const onSubmitHandler = (e) => {
+    const onSubmitHandler = async (e) => {
         e.preventDefault();
-        console.log(firstname, lastname, email, password);
 
-        setUserData({
+        const newUser = {
             fullname: {
                 firstname, lastname
             },
             email,
             password
-        })
+        }
+
+        try{
+            const response = await axios.post(`${import.meta.env.VITE_BASE_URL}/users/register`, newUser);
+            const data = response.data;
+
+            setUser(data.user);
+            localStorage.setItem('token', data.token);
+            navigate('/home');
+        }catch(e){
+            console.log(e);
+        }
+
         setFirstname('');
         setLastname('');
         setEmail('');
         setPassword('');
     }
-
-    useEffect(() => {
-        console.log(userData);
-    }, [userData]);
 
     return (
         <div className='h-screen w-full flex flex-col justify-between'>
@@ -72,7 +83,7 @@ const UserSignup = () => {
                         onChange={(e) => setPassword(e.target.value)}
                         className='bg-[#eeeeee] border-slate-300 text-sm my-1 mb-5 w-full h-10 p-3 rounded '
                     />
-                    <button className='bg-[#111] text-white font-semibold mb-3 rounded-lg px-4 py-2 w-full text-lg placeholder:text-base'>Sign in</button>
+                    <button className='bg-[#111] text-white font-semibold mb-3 rounded-lg px-4 py-2 w-full text-lg placeholder:text-base'>Create Account</button>
                 </form>
                 <p className='text-center'>Already have an account? <Link to='/users/login' className='text-blue-600'>Login here</Link></p>
             </div>

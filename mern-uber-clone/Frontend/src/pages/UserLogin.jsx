@@ -1,26 +1,33 @@
-import { useEffect, useState } from 'react';
+import { useContext, useState } from 'react';
 import uberLogo from '../assets/uberLogo.svg'
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { userContext } from '../../context/UserContextProvider';
 
 const UserLogin = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [userData, setUserData] = useState({});
 
-    const onSubmitHandler = (e) => {
+    const { user , setUser} = useContext(userContext);
+    const navigate = useNavigate();
+
+    const onSubmitHandler = async (e) => {
         e.preventDefault();
-        console.log(email, password);
+        
+        try {
+            const response = await axios.post(`${import.meta.env.VITE_BASE_URL}/users/login`, { email, password })
 
-        setUserData({
-            email, password
-        })
+            const data = response.data;
+            setUser(data.user);
+            localStorage.setItem('token', data.token)
+            navigate('/home');
+        }catch(e) {
+            console.log(e);
+        }
+
         setEmail('')
         setPassword('')
     }
-
-    // useEffect(() => {
-    //     console.log(userData);
-    // }, [userData]);
 
     return (
         <div className='h-screen w-full flex flex-col justify-between'>
