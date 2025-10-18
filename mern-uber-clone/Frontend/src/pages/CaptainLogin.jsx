@@ -1,26 +1,33 @@
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import uberDriverLogo from '../assets/uberDriverLogo.svg'
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { captainContext } from './CaptainContextProvider';
 
 const CaptainLogin = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [captainData, setCaptainData] = useState({});
 
-    const onSubmitHandler = (e) => {
+    const { captain, setCaptain } = useContext(captainContext);
+    const navigate = useNavigate();
+
+    const onSubmitHandler = async (e) => {
         e.preventDefault();
-        console.log(email, password);
 
-        setCaptainData({
-            email, password
-        })
-        setEmail('')
-        setPassword('')
+        try {
+            const response = await axios.post(`${import.meta.env.VITE_BASE_URL}/captains/login`, { email, password});
+
+            const data = response.data;
+            setCaptain(data.captain);
+            localStorage.setItem('token', data.token);
+            navigate('/captain-home');
+        } catch (e) {
+            console.log(e);
+        }
+
+        setEmail('');
+        setPassword('');
     }
-
-    // useEffect(() => {
-    //     console.log(captainData);
-    // }, [captainData]);
 
     return (
         <div className='h-screen w-full flex flex-col justify-between'>
